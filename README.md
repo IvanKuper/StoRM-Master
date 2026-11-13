@@ -56,12 +56,20 @@ npm run server
 ### Sample data (optional)
 
 ```
-# Load sample products and users
+# Load 7 sample products and one admin user (needs SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD, 12+ chars)
 npm run data:import
 
 # Remove the sample data
 npm run data:destroy
 ```
+
+Both commands wipe all users, products and orders. With `NODE_ENV=production` they refuse to run unless you add `--yes` (for example `node backend/seeder --yes`).
+
+Product photos are public domain / CC0 from Wikimedia Commons: Ball soccer 1990s1, Basketball through hoop, Closeup of a tennis ball (2), Nanoldsquash2, Black boxing gloves, Pair of 8kg dumbbells (Unsplash), Yoga mats.
+
+### Deploy (Railway)
+
+`npm run build` installs and builds the front end; `npm start` serves the API and the build. Set `NODE_ENV=production`, `MONGO_URI`, `JWT_SECRET`, `PAYPAL_CLIENT_ID`, `PAYPAL_APP_SECRET` and `PAYPAL_API_URL` on the service.
 
 ### Known build issue (Node 17 and newer)
 

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import colors from 'colors'
-import users from './data/users.js'
+import getUsers from './data/users.js'
 import products from './data/products.js'
 import User from './models/userModel.js'
 import Product from './models/productModel.js'
@@ -18,7 +18,7 @@ const importData = async () => {
     await Product.deleteMany()
     await User.deleteMany()
 
-    const createdUsers = await User.insertMany(users)
+    const createdUsers = await User.insertMany(getUsers())
 
     const adminUser = createdUsers[0]._id
 
@@ -48,6 +48,11 @@ const destroyData = async () => {
     console.error(`${error}`.red.inverse)
     process.exit(1)
   }
+}
+
+if (process.env.NODE_ENV === 'production' && !process.argv.includes('--yes')) {
+  console.error('Seeding wipes all users, products and orders. Add --yes to run it in production.'.red)
+  process.exit(1)
 }
 
 if (process.argv[2] === '-d') {
