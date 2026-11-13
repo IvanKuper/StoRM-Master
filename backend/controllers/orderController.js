@@ -1,86 +1,176 @@
 import asyncHandler from 'express-async-handler'
+import mongoose from 'mongoose'
 import Order from '../models/orderModel.js'
+import Product from '../models/productModel.js'
+import calcPrices from '../utils/calcPrices.js'
+import { getPayPalOrder, checkPayPalOrder } from '../utils/paypal.js'
 
 // @desc    Create new order
 // @route   POST /api/orders
 // @access  Private
 const addOrderItems = asyncHandler(async (req, res) => {
-  const {
-    orderItems,
+  const { orderItems, shippingAddress, paymentMethod } = req.body
+
+  if (!Array.isArray(orderItems) || orderItems.length === 0) {
+    res.status(400)
+    throw new Error('No order items')
+  }
+
+  // Name, image and price come from the database, never from the browser.
+  const ids = orderItems.map((item) => item && item.product)
+  // isValidObjectId in Mongoose 5 says yes to undefined, so check it is set too.
+  if (!ids.every((id) => id && mongoose.isValidObjectId(id))) {
+    res.status(400)
+    throw new Error('Invalid product')
+  }
+  const products = await Product.find({ _id: { $in: ids } })
+
+  // Same product on two lines counts together against stock.
+  const totalQty = {}
+  for (const item of orderItems) {
+    totalQty[item.product] = (totalQty[item.product] || 0) + Number(item.qty)
+  }
+
+  const items = orderItems.map((item) => {
+    const product = products.find((p) => p._id.toString() === String(item.product))
+    if (!product) {
+      res.status(400)
+      throw new Error('Product not found')
+    }
+    const qty = Number(item.qty)
+    if (
+      !Number.isInteger(qty) ||
+      qty < 1 ||
+      totalQty[item.product] > product.countInStock
+    ) {
+      res.status(400)
+      throw new Error(`Invalid quantity for ${product.name}`)
+    }
+    return {
+      name: product.name,
+      qty,
+      image: product.image,
+      price: product.price,
+      product: product._id,
+    }
+  })
+
+  const { taxPrice, shippingPrice, totalPrice } = calcPrices(items)
+
+  const order = new Order({
+    orderItems: items,
+    user: req.user._id,
     shippingAddress,
     paymentMethod,
-    itemsPrice,
     taxPrice,
     shippingPrice,
     totalPrice,
-  } = req.body
+  })
 
-  if (orderItems && orderItems.length === 0) {
-    res.status(400)
-    throw new Error('No order items')
-    return
-  } else {
-    const order = new Order({
-      orderItems,
-      user: req.user._id,
-      shippingAddress,
-      paymentMethod,
-      itemsPrice,
-      taxPrice,
-      shippingPrice,
-      totalPrice,
-    })
+  const createdOrder = await order.save()
 
-    const createdOrder = await order.save()
-
-    res.status(201).json(createdOrder)
-  }
+  res.status(201).json(createdOrder)
 })
 
 // @desc    Get order by ID
 // @route   GET /api/orders/:id
-// @access  Private
+// @access  Private (owner or admin)
 const getOrderById = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id).populate(
     'user',
     'name email'
   )
 
-  if (order) {
-    res.json(order)
-  } else {
+  if (!order) {
     res.status(404)
     throw new Error('Order not found')
   }
+
+  const isOwner = order.user && order.user._id.equals(req.user._id)
+  if (!isOwner && !req.user.isAdmin) {
+    // 404, not 403: do not reveal that someone else's order exists.
+    res.status(404)
+    throw new Error('Order not found')
+  }
+
+  res.json(order)
 })
 
 // @desc    Update order to paid
-// @route   GET /api/orders/:id/pay
-// @access  Private
+// @route   PUT /api/orders/:id/pay
+// @access  Private (owner)
 const updateOrderToPaid = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id)
 
-  if (order) {
-    order.isPaid = true
-    order.paidAt = Date.now()
-    order.paymentResult = {
-      id: req.body.id,
-      status: req.body.status,
-      update_time: req.body.update_time,
-      email_address: req.body.payer.email_address,
-    }
-
-    const updatedOrder = await order.save()
-
-    res.json(updatedOrder)
-  } else {
+  if (!order || !order.user.equals(req.user._id)) {
     res.status(404)
     throw new Error('Order not found')
   }
+  if (order.isPaid) {
+    res.status(400)
+    throw new Error('Order already paid')
+  }
+
+  const paypalOrderId = req.body && req.body.id
+  if (typeof paypalOrderId !== 'string' || !/^[A-Z0-9]+$/i.test(paypalOrderId)) {
+    res.status(400)
+    throw new Error('Invalid payment id')
+  }
+  // One PayPal payment can pay only one order.
+  if (await Order.exists({ 'paymentResult.id': paypalOrderId })) {
+    res.status(400)
+    throw new Error('Payment already used')
+  }
+
+  let paypalOrder
+  try {
+    paypalOrder = await getPayPalOrder(paypalOrderId)
+  } catch (error) {
+    console.error(error)
+    res.status(502)
+    throw new Error('Could not verify the payment with PayPal')
+  }
+  const problem = checkPayPalOrder(paypalOrder, order)
+  if (problem) {
+    res.status(400)
+    throw new Error(problem)
+  }
+
+  // Conditional update so two parallel requests cannot both mark it paid;
+  // the unique index on paymentResult.id stops one payment paying two orders.
+  let updatedOrder
+  try {
+    updatedOrder = await Order.findOneAndUpdate(
+    { _id: order._id, isPaid: false },
+    {
+      isPaid: true,
+      paidAt: Date.now(),
+      paymentResult: {
+        id: paypalOrder.id,
+        status: paypalOrder.status,
+        update_time: paypalOrder.update_time,
+        email_address: paypalOrder.payer && paypalOrder.payer.email_address,
+      },
+    },
+    { new: true }
+    )
+  } catch (error) {
+    if (error.code === 11000) {
+      res.status(400)
+      throw new Error('Payment already used')
+    }
+    throw error
+  }
+  if (!updatedOrder) {
+    res.status(400)
+    throw new Error('Order already paid')
+  }
+
+  res.json(updatedOrder)
 })
 
 // @desc    Update order to delivered
-// @route   GET /api/orders/:id/deliver
+// @route   PUT /api/orders/:id/deliver
 // @access  Private/Admin
 const updateOrderToDelivered = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id)

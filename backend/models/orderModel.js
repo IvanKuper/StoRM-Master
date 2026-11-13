@@ -73,6 +73,12 @@ const orderSchema = mongoose.Schema(
   }
 )
 
+// One PayPal payment can pay only one order, even under parallel requests.
+orderSchema.index(
+  { 'paymentResult.id': 1 },
+  { unique: true, partialFilterExpression: { 'paymentResult.id': { $type: 'string' } } }
+)
+
 const Order = mongoose.model('Order', orderSchema)
 
 export default Order
