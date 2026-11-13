@@ -3,6 +3,8 @@ import express from 'express'
 import dotenv from 'dotenv'
 import colors from 'colors'
 import morgan from 'morgan'
+import helmet from 'helmet'
+import { rateLimit } from 'express-rate-limit'
 import { notFound, errorHandler } from './middleware/errorMiddleware.js'
 import connectDB from './config/db.js'
 
@@ -21,7 +23,27 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))
 }
 
-app.use(express.json())
+if (process.env.NODE_ENV === 'production') {
+  // One proxy (the host's load balancer) in front, so the rate limit sees real client IPs.
+  app.set('trust proxy', 1)
+}
+
+// shortcut: CSP is off because the page loads the PayPal SDK and the React build inline; set a CSP before a real launch.
+app.use(helmet({ contentSecurityPolicy: false }))
+
+const limiter = (limit) =>
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+  })
+app.use('/api', limiter(300))
+// Login and sign-up get a tight limit against password guessing.
+app.use('/api/users/login', limiter(10))
+app.post('/api/users', limiter(10))
+
+app.use(express.json({ limit: '100kb' }))
 
 app.use('/api/products', productRoutes)
 app.use('/api/users', userRoutes)

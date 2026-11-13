@@ -31,6 +31,8 @@ PORT = 5000
 MONGO_URI = your mongodb uri
 JWT_SECRET = use-a-long-random-string-here
 PAYPAL_CLIENT_ID = your paypal client id
+PAYPAL_APP_SECRET = your paypal secret (the server checks every payment with PayPal)
+PAYPAL_API_URL = https://api-m.sandbox.paypal.com (use https://api-m.paypal.com for live)
 ```
 
 ### Install Dependencies (frontend & backend)
