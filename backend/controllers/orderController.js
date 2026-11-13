@@ -17,12 +17,19 @@ const addOrderItems = asyncHandler(async (req, res) => {
   }
 
   // Name, image and price come from the database, never from the browser.
-  const ids = orderItems.map((item) => item.product)
-  if (!ids.every((id) => mongoose.isValidObjectId(id))) {
+  const ids = orderItems.map((item) => item && item.product)
+  // isValidObjectId in Mongoose 5 says yes to undefined, so check it is set too.
+  if (!ids.every((id) => id && mongoose.isValidObjectId(id))) {
     res.status(400)
     throw new Error('Invalid product')
   }
   const products = await Product.find({ _id: { $in: ids } })
+
+  // Same product on two lines counts together against stock.
+  const totalQty = {}
+  for (const item of orderItems) {
+    totalQty[item.product] = (totalQty[item.product] || 0) + Number(item.qty)
+  }
 
   const items = orderItems.map((item) => {
     const product = products.find((p) => p._id.toString() === String(item.product))
@@ -31,7 +38,11 @@ const addOrderItems = asyncHandler(async (req, res) => {
       throw new Error('Product not found')
     }
     const qty = Number(item.qty)
-    if (!Number.isInteger(qty) || qty < 1 || qty > product.countInStock) {
+    if (
+      !Number.isInteger(qty) ||
+      qty < 1 ||
+      totalQty[item.product] > product.countInStock
+    ) {
       res.status(400)
       throw new Error(`Invalid quantity for ${product.name}`)
     }
@@ -115,8 +126,9 @@ const updateOrderToPaid = asyncHandler(async (req, res) => {
   try {
     paypalOrder = await getPayPalOrder(paypalOrderId)
   } catch (error) {
+    console.error(error)
     res.status(502)
-    throw error
+    throw new Error('Could not verify the payment with PayPal')
   }
   const problem = checkPayPalOrder(paypalOrder, order)
   if (problem) {
@@ -124,9 +136,11 @@ const updateOrderToPaid = asyncHandler(async (req, res) => {
     throw new Error(problem)
   }
 
-  // Conditional update so two parallel requests cannot both mark it paid.
-  // shortcut: the same PayPal id racing on two orders at once is not blocked; add a unique index if this goes live.
-  const updatedOrder = await Order.findOneAndUpdate(
+  // Conditional update so two parallel requests cannot both mark it paid;
+  // the unique index on paymentResult.id stops one payment paying two orders.
+  let updatedOrder
+  try {
+    updatedOrder = await Order.findOneAndUpdate(
     { _id: order._id, isPaid: false },
     {
       isPaid: true,
@@ -139,7 +153,14 @@ const updateOrderToPaid = asyncHandler(async (req, res) => {
       },
     },
     { new: true }
-  )
+    )
+  } catch (error) {
+    if (error.code === 11000) {
+      res.status(400)
+      throw new Error('Payment already used')
+    }
+    throw error
+  }
   if (!updatedOrder) {
     res.status(400)
     throw new Error('Order already paid')

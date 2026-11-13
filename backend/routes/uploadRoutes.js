@@ -24,7 +24,7 @@ function checkFileType(file, cb) {
   if (extname && mimetype) {
     return cb(null, true)
   } else {
-    cb('Images only!')
+    cb(Object.assign(new Error('Images only!'), { status: 400 }))
   }
 }
 

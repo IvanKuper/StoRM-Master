@@ -40,4 +40,7 @@ test('PayPal check rejects a lower amount, other currency or unfinished payment'
   assert.match(checkPayPalOrder(paid('126.48', 'EUR'), order), /currency/)
   assert.match(checkPayPalOrder(paid('126.48', 'USD', 'APPROVED'), order), /not completed/)
   assert.match(checkPayPalOrder({ status: 'COMPLETED' }, order), /currency/)
+  const pending = paid('126.48')
+  pending.purchase_units[0].payments = { captures: [{ status: 'PENDING' }] }
+  assert.match(checkPayPalOrder(pending, order), /pending/)
 })

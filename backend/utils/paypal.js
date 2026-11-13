@@ -17,6 +17,7 @@ const getAccessToken = async () => {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: 'grant_type=client_credentials',
+    signal: AbortSignal.timeout(10000),
   })
   if (!res.ok) throw new Error('PayPal authentication failed')
   return (await res.json()).access_token
@@ -27,7 +28,10 @@ const getPayPalOrder = async (paypalOrderId) => {
   const token = await getAccessToken()
   const res = await fetch(
     `${apiUrl()}/v2/checkout/orders/${encodeURIComponent(paypalOrderId)}`,
-    { headers: { Authorization: `Bearer ${token}` } }
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(10000),
+    }
   )
   if (!res.ok) throw new Error('PayPal order not found')
   return res.json()
@@ -36,7 +40,11 @@ const getPayPalOrder = async (paypalOrderId) => {
 // Returns an error message, or null when the PayPal order pays this order in full.
 const checkPayPalOrder = (paypalOrder, order) => {
   if (paypalOrder.status !== 'COMPLETED') return 'Payment not completed'
-  const amount = paypalOrder.purchase_units?.[0]?.amount
+  const unit = paypalOrder.purchase_units?.[0]
+  const capture = unit?.payments?.captures?.[0]
+  // Order status can be COMPLETED while the money itself is still pending.
+  if (capture && capture.status !== 'COMPLETED') return 'Payment still pending'
+  const amount = unit?.amount
   if (!amount || amount.currency_code !== 'USD') return 'Wrong payment currency'
   if (Number(amount.value).toFixed(2) !== order.totalPrice.toFixed(2)) {
     return 'Paid amount does not match the order total'

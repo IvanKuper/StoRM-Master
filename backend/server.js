@@ -29,18 +29,25 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // shortcut: CSP is off because the page loads the PayPal SDK and the React build inline; set a CSP before a real launch.
-app.use(helmet({ contentSecurityPolicy: false }))
+// The PayPal checkout popup needs the page to keep its opener.
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  })
+)
 
-const limiter = (limit) =>
+const limiter = (limit, extra) =>
   rateLimit({
     windowMs: 15 * 60 * 1000,
     limit,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
+    ...extra,
   })
-app.use('/api', limiter(300))
-// Login and sign-up get a tight limit against password guessing.
-app.use('/api/users/login', limiter(10))
+app.use('/api', limiter(1000))
+// Only failed logins count, against password guessing; sign-ups count all.
+app.use('/api/users/login', limiter(10, { skipSuccessfulRequests: true }))
 app.post('/api/users', limiter(10))
 
 app.use(express.json({ limit: '100kb' }))
