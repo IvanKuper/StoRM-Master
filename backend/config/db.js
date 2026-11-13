@@ -6,6 +6,8 @@ const connectDB = async () => {
       useUnifiedTopology: true,
       useNewUrlParser: true,
       useCreateIndex: true,
+      // Own database name, so several apps can share one free cluster
+      dbName: process.env.DB_NAME || 'storm',
     })
 
     console.log(`MongoDB Connected: ${conn.connection.host}`.cyan.underline)

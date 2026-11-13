@@ -7,6 +7,9 @@ import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import { notFound, errorHandler } from './middleware/errorMiddleware.js'
 import connectDB from './config/db.js'
+import Product from './models/productModel.js'
+import User from './models/userModel.js'
+import addSampleProductsIfEmpty from './utils/sampleProducts.js'
 
 import productRoutes from './routes/productRoutes.js'
 import userRoutes from './routes/userRoutes.js'
@@ -16,6 +19,9 @@ import uploadRoutes from './routes/uploadRoutes.js'
 dotenv.config()
 
 connectDB()
+  .then(() => addSampleProductsIfEmpty(Product, User))
+  .then((added) => added && console.log(`Added ${added} sample products`))
+  .catch((error) => console.error(`Sample products: ${error.message}`))
 
 const app = express()
 
