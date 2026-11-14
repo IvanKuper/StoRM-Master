@@ -21,6 +21,7 @@ const ProductScreen = ({ history, match }) => {
 
   const productDetails = useSelector((state) => state.productDetails)
   const { loading, error, product } = productDetails
+  const reviewCount = (product.reviews || []).length
 
   const userLogin = useSelector((state) => state.userLogin)
   const { userInfo } = userLogin
@@ -80,8 +81,10 @@ const ProductScreen = ({ history, match }) => {
                 </ListGroup.Item>
                 <ListGroup.Item>
                   <Rating
-                    value={product.rating}
-                    text={`${product.numReviews} reviews`}
+                    value={reviewCount ? product.rating : 0}
+                    text={
+                      reviewCount ? `${reviewCount} reviews` : 'No reviews yet'
+                    }
                   />
                 </ListGroup.Item>
                 <ListGroup.Item>Price: ${product.price}</ListGroup.Item>

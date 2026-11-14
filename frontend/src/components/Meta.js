@@ -13,8 +13,8 @@ const Meta = ({ title, description, keywords }) => {
 
 Meta.defaultProps = {
   title: "Welcome To StoRM",
-  description: "We sell the best products for cheap",
-  keywords: "electronics, buy electronics, cheap electroincs",
+  description: "Sports gear for every game: balls, rackets, gloves and fitness",
+  keywords: "sports, sports gear, fitness, balls, rackets",
 };
 
 export default Meta;

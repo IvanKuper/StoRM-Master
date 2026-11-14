@@ -3,12 +3,12 @@ import assert from 'node:assert/strict'
 import calcPrices from './calcPrices.js'
 import { checkPayPalOrder } from './paypal.js'
 
-test('small order pays $100 shipping and 15% tax', () => {
+test('small order pays $10 shipping and 15% tax', () => {
   assert.deepEqual(calcPrices([{ price: 29.99, qty: 2 }]), {
     itemsPrice: 59.98,
-    shippingPrice: 100,
+    shippingPrice: 10,
     taxPrice: 9,
-    totalPrice: 168.98,
+    totalPrice: 78.98,
   })
 })
 
@@ -22,7 +22,8 @@ test('order over $100 ships free', () => {
 })
 
 test('exactly $100 still pays shipping', () => {
-  assert.equal(calcPrices([{ price: 100, qty: 1 }]).shippingPrice, 100)
+  assert.equal(calcPrices([{ price: 100, qty: 1 }]).shippingPrice, 10)
+  assert.equal(calcPrices([{ price: 100.01, qty: 1 }]).shippingPrice, 0)
 })
 
 const paid = (value, currency_code = 'USD', status = 'COMPLETED') => ({

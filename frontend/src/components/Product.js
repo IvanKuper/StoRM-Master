@@ -4,6 +4,8 @@ import { Card } from 'react-bootstrap'
 import Rating from './Rating'
 
 const Product = ({ product }) => {
+  // Count real reviews: the sample catalog has made-up totals but no reviews.
+  const reviewCount = (product.reviews || []).length
   return (
     <Card className='my-3 p-3 rounded'>
       <Link to={`/product/${product._id}`}>
@@ -19,8 +21,8 @@ const Product = ({ product }) => {
 
         <Card.Text as='div'>
           <Rating
-            value={product.rating}
-            text={`${product.numReviews} reviews`}
+            value={reviewCount ? product.rating : 0}
+            text={reviewCount ? `${reviewCount} reviews` : 'No reviews yet'}
           />
         </Card.Text>
 
