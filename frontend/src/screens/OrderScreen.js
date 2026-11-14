@@ -20,6 +20,7 @@ const OrderScreen = ({ match, history }) => {
   const orderId = match.params.id
 
   const [sdkReady, setSdkReady] = useState(false)
+  const [demoPay, setDemoPay] = useState(false)
 
   const dispatch = useDispatch()
 
@@ -53,6 +54,11 @@ const OrderScreen = ({ match, history }) => {
 
     const addPayPalScript = async () => {
       const { data: clientId } = await axios.get('/api/config/paypal')
+      // No PayPal keys on the server: this is a demo store
+      if (!clientId) {
+        setDemoPay(true)
+        return
+      }
       const script = document.createElement('script')
       script.type = 'text/javascript'
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}`
@@ -198,7 +204,23 @@ const OrderScreen = ({ match, history }) => {
               {!order.isPaid && (
                 <ListGroup.Item>
                   {loadingPay && <Loader />}
-                  {!sdkReady ? (
+                  {demoPay ? (
+                    <>
+                      <p className='small'>
+                        Demo store: no real money is charged.
+                      </p>
+                      <Button
+                        type='button'
+                        className='btn btn-block'
+                        disabled={loadingPay}
+                        onClick={() =>
+                          dispatch(payOrder(orderId, { demo: true }))
+                        }
+                      >
+                        Pay now (demo)
+                      </Button>
+                    </>
+                  ) : !sdkReady ? (
                     <Loader />
                   ) : (
                     <PayPalButton
