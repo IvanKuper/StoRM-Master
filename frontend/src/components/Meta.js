@@ -12,7 +12,7 @@ const Meta = ({ title, description, keywords }) => {
 };
 
 Meta.defaultProps = {
-  title: "Welcome To StoRM",
+  title: "StoRM | Sports gear store",
   description: "Sports gear for every game: balls, rackets, gloves and fitness",
   keywords: "sports, sports gear, fitness, balls, rackets",
 };
