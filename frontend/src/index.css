@@ -138,3 +138,9 @@ h2 {
   border-radius: 10px;
   border: 3px solid #ee324e;
 }
+
+/* The theme's wide side padding hid the chosen number in small selects. */
+select.form-control {
+  padding: 0 0.5rem;
+  min-width: 4.5rem;
+}

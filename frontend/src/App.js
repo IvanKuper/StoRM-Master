@@ -1,6 +1,7 @@
-import React from 'react'
-import { BrowserRouter as Router, Route } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { BrowserRouter as Router, Route, useLocation } from 'react-router-dom'
 import { Container } from 'react-bootstrap'
+import Meta from './components/Meta'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import HomeScreen from './screens/HomeScreen'
@@ -19,9 +20,21 @@ import ProductListScreen from './screens/ProductListScreen'
 import ProductEditScreen from './screens/ProductEditScreen'
 import OrderListScreen from './screens/OrderListScreen'
 
+// A new page opens at the top, not at the scroll spot of the last one.
+const ScrollToTop = () => {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
+
 const App = () => {
   return (
     <Router>
+      {/* Default tab title; a screen with its own Meta overrides it. */}
+      <Meta />
+      <ScrollToTop />
       <Header />
       <main className='py-3'>
         <Container>

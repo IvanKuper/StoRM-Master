@@ -20,6 +20,7 @@ const Footer = () => {
                 className="link"
                 href="https://www.linkedin.com/in/ivankuper/"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 <i className="socials fab fa-linkedin fa-2x px-2"></i>
               </a>
@@ -27,6 +28,7 @@ const Footer = () => {
                 className="link"
                 href="https://github.com/IvanKuper"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 <i className="socials fab fa-github fa-2x px-2"></i>
               </a>
@@ -34,6 +36,7 @@ const Footer = () => {
                 className="link"
                 href="https://www.instagram.com/ivan_kuper/"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 <i className="socials fab fa-instagram fa-2x px-2"></i>
               </a>
@@ -45,10 +48,11 @@ const Footer = () => {
                   className="link"
                   href="https://ivankuper.netlify.app/"
                   target={"_blank"}
+                  rel="noopener noreferrer"
                 >
                   Ivan Kuper
                 </a>
-                , All Right Reserved 2023.
+                , All Right Reserved {new Date().getFullYear()}.
               </p>
             </div>
           </Col>
