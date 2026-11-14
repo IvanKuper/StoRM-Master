@@ -3,7 +3,11 @@ import mongoose from 'mongoose'
 import Order from '../models/orderModel.js'
 import Product from '../models/productModel.js'
 import calcPrices from '../utils/calcPrices.js'
-import { getPayPalOrder, checkPayPalOrder } from '../utils/paypal.js'
+import {
+  getPayPalOrder,
+  checkPayPalOrder,
+  isPayPalConfigured,
+} from '../utils/paypal.js'
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -111,29 +115,49 @@ const updateOrderToPaid = asyncHandler(async (req, res) => {
     throw new Error('Order already paid')
   }
 
-  const paypalOrderId = req.body && req.body.id
-  if (typeof paypalOrderId !== 'string' || !/^[A-Z0-9]+$/i.test(paypalOrderId)) {
-    res.status(400)
-    throw new Error('Invalid payment id')
-  }
-  // One PayPal payment can pay only one order.
-  if (await Order.exists({ 'paymentResult.id': paypalOrderId })) {
-    res.status(400)
-    throw new Error('Payment already used')
-  }
+  let paymentResult
+  if (!isPayPalConfigured()) {
+    // Demo store: no money moves, the owner just confirms the demo payment.
+    if (!(req.body && req.body.demo === true)) {
+      res.status(400)
+      throw new Error('Invalid payment')
+    }
+    paymentResult = {
+      id: `DEMO-${order._id}`,
+      status: 'DEMO',
+      update_time: new Date().toISOString(),
+    }
+  } else {
+    const paypalOrderId = req.body && req.body.id
+    if (typeof paypalOrderId !== 'string' || !/^[A-Z0-9]+$/i.test(paypalOrderId)) {
+      res.status(400)
+      throw new Error('Invalid payment id')
+    }
+    // One PayPal payment can pay only one order.
+    if (await Order.exists({ 'paymentResult.id': paypalOrderId })) {
+      res.status(400)
+      throw new Error('Payment already used')
+    }
 
-  let paypalOrder
-  try {
-    paypalOrder = await getPayPalOrder(paypalOrderId)
-  } catch (error) {
-    console.error(error)
-    res.status(502)
-    throw new Error('Could not verify the payment with PayPal')
-  }
-  const problem = checkPayPalOrder(paypalOrder, order)
-  if (problem) {
-    res.status(400)
-    throw new Error(problem)
+    let paypalOrder
+    try {
+      paypalOrder = await getPayPalOrder(paypalOrderId)
+    } catch (error) {
+      console.error(error)
+      res.status(502)
+      throw new Error('Could not verify the payment with PayPal')
+    }
+    const problem = checkPayPalOrder(paypalOrder, order)
+    if (problem) {
+      res.status(400)
+      throw new Error(problem)
+    }
+    paymentResult = {
+      id: paypalOrder.id,
+      status: paypalOrder.status,
+      update_time: paypalOrder.update_time,
+      email_address: paypalOrder.payer && paypalOrder.payer.email_address,
+    }
   }
 
   // Conditional update so two parallel requests cannot both mark it paid;
@@ -145,12 +169,7 @@ const updateOrderToPaid = asyncHandler(async (req, res) => {
     {
       isPaid: true,
       paidAt: Date.now(),
-      paymentResult: {
-        id: paypalOrder.id,
-        status: paypalOrder.status,
-        update_time: paypalOrder.update_time,
-        email_address: paypalOrder.payer && paypalOrder.payer.email_address,
-      },
+      paymentResult,
     },
     { new: true }
     )

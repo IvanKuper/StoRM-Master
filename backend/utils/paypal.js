@@ -52,4 +52,8 @@ const checkPayPalOrder = (paypalOrder, order) => {
   return null
 }
 
-export { getPayPalOrder, checkPayPalOrder }
+// Without PayPal keys the store runs as a demo and orders are paid with a demo button.
+const isPayPalConfigured = () =>
+  Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_APP_SECRET)
+
+export { getPayPalOrder, checkPayPalOrder, isPayPalConfigured }
