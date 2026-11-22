@@ -5,6 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
+    "test": "node --test backend/utils/prices.test.js backend/utils/sampleProducts.test.js backend/test/api.test.js",
     "start": "node backend/server",
     "build": "npm ci --prefix frontend && NODE_OPTIONS=--openssl-legacy-provider npm run build --prefix frontend",
     "server": "nodemon backend/server",
@@ -12,8 +13,7 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "data:import": "node backend/seeder",
     "data:destroy": "node backend/seeder -d",
-    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix frontend && npm run build --prefix frontend",
-    "test": "node --test backend/utils/prices.test.js backend/utils/sampleProducts.test.js"
+    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix frontend && npm run build --prefix frontend"
   },
   "author": "Brad Traversy",
   "license": "MIT",
@@ -25,10 +25,10 @@
     "express-async-handler": "^1.1.4",
     "express-rate-limit": "^8.7.4",
     "helmet": "^8.3.0",
-    "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.10.6",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.24.10",
     "morgan": "^1.10.0",
-    "multer": "^1.4.2"
+    "multer": "^2.5.0"
   },
   "devDependencies": {
     "concurrently": "^5.3.0",
