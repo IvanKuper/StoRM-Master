@@ -3,6 +3,12 @@
 Hi my name is Ivan and this is My Final project in HackerU college of Web Development/Fullstack course.
 This project is an online store, inspired from real madrid Official Store.
 
+**Live demo:** https://storm-shop.onrender.com (free server: the first load can take about a minute). Without PayPal keys the store runs in demo mode: "Pay now (demo)" marks the order paid and no money moves.
+
+![Home page](docs/home.png)
+
+![Product page](docs/product.png)
+
 ## Features
 
 - Full featured shopping cart
@@ -41,6 +47,12 @@ PAYPAL_API_URL = https://api-m.sandbox.paypal.com (use https://api-m.paypal.com 
 npm install
 cd frontend
 npm install
+```
+
+### Tests
+
+```
+npm test   # needs a local MongoDB (TEST_MONGO_URI, default mongodb://127.0.0.1:27017)
 ```
 
 ### Run
