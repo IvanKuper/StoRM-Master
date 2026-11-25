@@ -154,3 +154,8 @@ main .img-fluid:not(.carousel img) { border-radius: 14px; }
 @media (max-width: 576px) {
   .carousel img { height: 200px; margin-top: 56px; margin-bottom: 36px; padding: 16px; }
 }
+
+/* footer: the "Payments Accepted" heading was dark on dark; copyright text and link were too faint */
+footer h3 { color: #f1f1f1; }
+.copyright-text p { color: #b5b5b5; }
+.copyright-text p a { text-decoration: underline; }
