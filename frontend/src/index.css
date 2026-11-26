@@ -1,5 +1,3 @@
-@import "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css";
-@import url("https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@500&display=swap");
 /* ===== Scrollbar CSS ===== */
 /* Firefox */
 * {
@@ -80,6 +78,7 @@ h2 {
 }
 
 .carousel img {
+  width: auto;
   height: 300px;
   padding: 30px;
   margin: 40px;
@@ -97,6 +96,7 @@ h2 {
 }
 .navLogo {
   width: 5rem;
+  height: auto;
 }
 .link {
   color: lightgrey;
@@ -134,7 +134,7 @@ main h1::after { content: ""; position: absolute; left: 0; bottom: 0.4rem; width
 
 .card { border: 0; border-radius: 14px !important; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06); transition: transform .2s ease, box-shadow .2s ease; }
 .card:hover { transform: translateY(-3px); box-shadow: 0 2px 4px rgba(0,0,0,.08), 0 14px 32px rgba(0,0,0,.10); }
-.card-img-top { border-radius: 10px; aspect-ratio: 4 / 3; object-fit: cover; }
+.card-img-top { height: auto; border-radius: 10px; aspect-ratio: 4 / 3; object-fit: cover; }
 .card a { color: inherit; }
 .card-title strong { font-weight: 600; }
 .card h3 { padding: .5rem 0 0; margin: 0; color: #212529; }
@@ -156,6 +156,15 @@ main .img-fluid:not(.carousel img) { border-radius: 14px; }
 }
 
 /* footer: the "Payments Accepted" heading was dark on dark; copyright text and link were too faint */
-footer h3 { color: #f1f1f1; }
+footer h2, footer h3 { color: #f1f1f1; }
 .copyright-text p { color: #b5b5b5; }
 .copyright-text p a { text-decoration: underline; }
+
+/* reserve the carousel's height while it loads, so the page does not jump */
+.carousel-placeholder { min-height: 412px; display: flex; flex-direction: column; justify-content: center; margin-top: 1.5rem; }
+@media (max-width: 576px) { .carousel-placeholder { min-height: 330px; } }
+.loader-note { text-align: center; color: #5b6168; margin-top: 1rem; }
+.card .product-price { font-size: 1.75rem; padding: .5rem 0 0; margin: 0; color: #212529; letter-spacing: .04em; }
+.demo-note { font-size: 14px; color: #b5b5b5; margin: .25rem 0 1rem; }
+
+@media (max-width: 576px) { footer img.w-25 { width: 60% !important; } }

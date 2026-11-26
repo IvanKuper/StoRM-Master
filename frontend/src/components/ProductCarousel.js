@@ -17,7 +17,9 @@ const ProductCarousel = () => {
   }, [dispatch])
 
   return loading ? (
-    <Loader />
+    <div className='carousel-placeholder'>
+      <Loader />
+    </div>
   ) : error ? (
     <Message variant='danger'>{error}</Message>
   ) : (
@@ -25,7 +27,13 @@ const ProductCarousel = () => {
       {products.map((product) => (
         <Carousel.Item key={product._id}>
           <Link to={`/product/${product._id}`}>
-            <Image src={product.image} alt={product.name} fluid />
+            <Image
+              src={product.image}
+              alt={product.name}
+              width='640'
+              height='640'
+              fluid
+            />
             <Carousel.Caption className='carousel-caption'>
               <h2>
                 {product.name} (${product.price})
