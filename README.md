@@ -1,7 +1,7 @@
 # StoRM eCommerce Platform
 
-Hi my name is Ivan and this is My Final project in HackerU college of Web Development/Fullstack course.
-This project is an online store, inspired from real madrid Official Store.
+I designed and built StoRM on my own, from the database to the last screen, as my final project for the HackerU Full-Stack Web Development course.
+The look of the store is inspired by the Real Madrid official store.
 
 **Live demo:** https://storm-shop.onrender.com (free server: the first load can take about a minute). Without PayPal keys the store runs in demo mode: "Pay now (demo)" marks the order paid and no money moves.
 
