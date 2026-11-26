@@ -16,7 +16,7 @@ const Footer = () => {
               />
             </div>
             <p>
-              <a
+              <a aria-label="LinkedIn"
                 className="link"
                 href="https://www.linkedin.com/in/ivankuper/"
                 target="_blank"
@@ -24,7 +24,7 @@ const Footer = () => {
               >
                 <i className="socials fab fa-linkedin fa-2x px-2"></i>
               </a>
-              <a
+              <a aria-label="GitHub"
                 className="link"
                 href="https://github.com/IvanKuper"
                 target="_blank"
@@ -32,7 +32,7 @@ const Footer = () => {
               >
                 <i className="socials fab fa-github fa-2x px-2"></i>
               </a>
-              <a
+              <a aria-label="Instagram"
                 className="link"
                 href="https://www.instagram.com/ivan_kuper/"
                 target="_blank"
@@ -46,7 +46,7 @@ const Footer = () => {
                 Developed By:
                 <a
                   className="link"
-                  href="https://ivankuper.netlify.app/"
+                  href="https://ivankuper.github.io/"
                   target={"_blank"}
                   rel="noopener noreferrer"
                 >
