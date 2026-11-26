@@ -37,14 +37,6 @@ const Footer = () => {
               >
                 <i className="socials fab fa-github fa-2x px-2"></i>
               </a>
-              <a aria-label="Instagram"
-                className="link"
-                href="https://www.instagram.com/ivan_kuper/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="socials fab fa-instagram fa-2x px-2"></i>
-              </a>
             </p>
             <div className="copyright-text">
               <p>
