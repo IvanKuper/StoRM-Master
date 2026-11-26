@@ -1,9 +1,12 @@
 import path from 'path'
+import fs from 'fs'
+import crypto from 'crypto'
 import express from 'express'
 import dotenv from 'dotenv'
 import colors from 'colors'
 import morgan from 'morgan'
 import helmet from 'helmet'
+import compression from 'compression'
 import { rateLimit } from 'express-rate-limit'
 import { notFound, errorHandler } from './middleware/errorMiddleware.js'
 import connectDB from './config/db.js'
@@ -34,14 +37,43 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1)
 }
 
-// shortcut: CSP is off because the page loads the PayPal SDK and the React build inline; set a CSP before a real launch.
+// Scripts: our own bundle, the PayPal SDK, and the build's small inline snippet (allowed by its hash, so the policy survives a rebuild).
+const inlineScriptHashes = () => {
+  try {
+    const html = fs.readFileSync(path.resolve('frontend', 'build', 'index.html'), 'utf8')
+    return [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
+      (m) => `'sha256-${crypto.createHash('sha256').update(m[1]).digest('base64')}'`
+    )
+  } catch {
+    return []
+  }
+}
+const paypal = ['https://*.paypal.com', 'https://*.paypalobjects.com']
+// shortcut: style-src keeps 'unsafe-inline' (React and the theme set inline styles); tighten with nonces if this becomes a real shop.
 // The PayPal checkout popup needs the page to keep its opener.
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", ...inlineScriptHashes(), ...paypal],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdnjs.cloudflare.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", ...paypal],
+        frameSrc: paypal,
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'", ...paypal],
+        frameAncestors: ["'none'"],
+      },
+    },
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   })
 )
+
+// Render does not compress, so the JS/CSS bundle is gzipped here.
+app.use(compression())
 
 const limiter = (limit, extra) =>
   rateLimit({

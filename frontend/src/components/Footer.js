@@ -7,14 +7,19 @@ const Footer = () => {
       <Container>
         <Row>
           <Col className="text-center py-3">
-            <h3>Payments Accepted</h3>
+            <h2>Payments Accepted</h2>
             <div className="text-center">
               <img
                 src="/images/payment.png"
                 className="img-fluid w-25"
-                alt="payment"
+                alt="Visa, Mastercard, American Express and PayPal"
+                width="2463"
+                height="512"
               />
             </div>
+            <p className="demo-note">
+              Demo store: checkout uses a test payment and no real money is taken.
+            </p>
             <p>
               <a aria-label="LinkedIn"
                 className="link"

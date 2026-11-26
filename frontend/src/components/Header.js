@@ -22,7 +22,13 @@ const Header = () => {
         <Container>
           <LinkContainer to="/">
             <Navbar.Brand>
-              <img className="navLogo mx-2" src="/images/Logo.png" alt="StoRM" />
+              <img
+                className="navLogo mx-2"
+                src="/images/Logo.png"
+                alt="StoRM"
+                width="500"
+                height="500"
+              />
             </Navbar.Brand>
           </LinkContainer>
           {/* <LinkContainer to="/">

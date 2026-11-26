@@ -168,3 +168,9 @@ test('admin can delete a product and a user', async () => {
   assert.equal((await api(`/users/${tempUser._id}`, { method: 'DELETE', token: bob })).status, 200)
   assert.equal((await api('/orders/myorders', { token: temp })).status, 401)
 })
+
+test('responses carry a content security policy and are not framable', async () => {
+  const res = await fetch(BASE + '/products')
+  assert.match(res.headers.get('content-security-policy'), /default-src 'self'/)
+  assert.match(res.headers.get('content-security-policy'), /frame-ancestors 'none'/)
+})
